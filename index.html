@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blok Oyunu Pixel Uzay</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="twinkling-stars"></div>
+
+    <div class="game-wrapper">
+        
+        <div id="mode-selection-menu">
+            <h1>Oyun Modunu Seç</h1>
+            <button class="mode-button" data-mode="klasik">Klasik</button>
+            <button class="mode-button" data-mode="zen">Zen Modu</button>
+            <button class="mode-button" data-mode="arcane">Arcane</button>
+            <button id="stats-button">🏆 Başarımlar</button> </div>
+
+        <div class="game-container">
+            <div class="game-header-scores">
+                <div id="high-score-area">TOP: <span id="high-score-value">0</span></div>
+                <div id="current-score-area"><span id="current-score-value">0</span></div>
+                <div id="header-placeholder">
+                    <button id="in-game-menu-button" class="icon-button" title="Ana Menü">🏠</button>
+                    <button id="sfx-toggle-button" class="icon-button">🔊</button>
+                </div>
+            </div>
+
+            <canvas id="game-board"></canvas>
+
+            <div class="pieces-container-wrapper">
+                <h3>Sıradaki Parçalar:</h3>
+                <div class="pieces-container" id="pieces-container"></div>
+            </div>
+
+            <div id="combo-message" style="display:none;">KOMBO!</div>
+            <div id="new-record-message" style="display:none;">YENİ REKOR!</div>
+        </div>
+    </div>
+
+    <div id="game-over-overlay" style="display:none;">
+        <div id="game-over-box">
+            <h2 id="game-over-title">OYUN BİTTİ</h2>
+            <p>Skorun: <span id="final-score">0</span></p>
+            <button id="restart-button">Tekrar Oyna</button>
+            <button id="main-menu-button">Ana Menü</button>
+        </div>
+    </div>
+
+    <div id="stats-overlay" style="display:none;">
+        <div id="stats-box">
+            <button id="stats-close-button">X</button>
+            <h2>İstatistikler & Başarımlar</h2>
+            <div id="stats-content"></div>
+        </div>
+    </div>
+
+    <div id="achievement-unlocked-toast" class="toast"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
