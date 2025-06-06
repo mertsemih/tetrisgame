@@ -71,5 +71,11 @@ Proje, herhangi bir build işlemi veya sunucu gerektirmez.
 * **Parça Döndürme:** Oyuncuya daha fazla esneklik sağlamak için parçaları 90 derece döndürme imkanı.
 * **Genel Liderlik Tablosu (Leaderboard):** Oyuncuların skorlarını bir sunucuya kaydederek birbirleriyle yarışması.
 
+---
+
+## 📜 Lisans
+
+Bu proje MIT Lisansı ile lisanslanmıştır. Daha fazla detay için `LICENSE` dosyasına göz atın.
+
 ##İletişim
 semihmertsariyerli.06@gmail.com
