@@ -25,13 +25,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Ses Efektleri ---
     const SFX = {
         place: new Audio('sfx/place.wav'),
-        clear: new Audio('sfx/clear.wav'),
-        combo: new Audio('sfx/kombo.mp3'),
-        gameOver: new Audio('sfx/game-over.wav'),
-        newRecord: new Audio('sfx/new-record.wav'),
+        clear: new Audio('sfx/clear.mp3'),
+        combo: new Audio('sfx/combo.mp3'),
+        gameOver: new Audio('sfx/game-over.mp3'),
+        newRecord: new Audio('sfx/new-record.mp3'),
         click: new Audio('sfx/click.wav'),
-        bomb: new Audio('sfx/bomb.wav'),
-        laser: new Audio('sfx/laser.wav')
+        bomb: new Audio('sfx/bomba.mp3'),
+        laser: new Audio('sfx/lazer.mp3')
     };
 
     // --- Oyun Sabitleri ve Değişkenleri ---
@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let grid = [];
     let score = 0;
+    let highScore = 0;
     let availablePieces = [];
     let selectedPieceData = null;
     let selectedPieceElement = null;
@@ -450,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function generateUpcomingPieces() {
         availablePieces = [];
         for (let i = 0; i < 3; i++) {
-            if (currentMode === 'arcane' && Math.random() < 0.20) { // Test için %50 ihtimal
+            if (currentMode === 'arcane' && Math.random() < 0.50) {
                 availablePieces.push(POWERUP_DEFINITIONS[Math.floor(Math.random() * POWERUP_DEFINITIONS.length)]);
             } else {
                 availablePieces.push(getRandomPieceDefinition());
@@ -512,62 +513,40 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Sürükle-Bırak Fonksiyonları ---
+    // --- Sürükle-Bırak Fonksiyonları (Performans için Optimize Edilmiş) ---
     function handleDragStart(event, pieceData, pieceIndex) {
-        if (isGameOver || selectedPieceElement || isClearingLine) return;
+        if (isGameOver || isDragging || isClearingLine) return;
         event.preventDefault();
+        
         isDragging = true;
         document.body.classList.add('no-select');
         selectedPieceData = pieceData;
         originalPieceIndexInAvailable = pieceIndex;
         selectedPieceElement = document.createElement('div');
         selectedPieceElement.classList.add('dragging-piece');
-        let minR_drag = 0,
-            maxR_drag = 0,
-            minC_drag = 0,
-            maxC_drag = 0;
-        pieceData.shape.forEach(p => {
-            minR_drag = Math.min(minR_drag, p[1]);
-            maxR_drag = Math.max(maxR_drag, p[1]);
-            minC_drag = Math.min(minC_drag, p[0]);
-            maxC_drag = Math.max(maxC_drag, p[0]);
-        });
-        const rows_drag = maxR_drag - minR_drag + 1;
-        const cols_drag = maxC_drag - minC_drag + 1;
-        selectedPieceElement.style.gridTemplateRows = `repeat(${rows_drag}, ${CELL_SIZE}px)`;
-        selectedPieceElement.style.gridTemplateColumns = `repeat(${cols_drag}, ${CELL_SIZE}px)`;
-        const displayGrid_drag = Array(rows_drag).fill(null).map(() => Array(cols_drag).fill(false));
-        pieceData.shape.forEach(p => {
-            displayGrid_drag[p[1] - minR_drag][p[0] - minC_drag] = true;
-        });
-        for (let r_drag_idx = 0; r_drag_idx < rows_drag; r_drag_idx++) {
-            for (let c_drag_idx = 0; c_drag_idx < cols_drag; c_drag_idx++) {
-                const cellDiv_drag = document.createElement('div');
-                cellDiv_drag.classList.add('cell');
-                cellDiv_drag.style.width = `${CELL_SIZE}px`;
-                cellDiv_drag.style.height = `${CELL_SIZE}px`;
-                if (displayGrid_drag[r_drag_idx][c_drag_idx]) {
-                    cellDiv_drag.style.backgroundColor = pieceData.color;
-                } else {
-                    cellDiv_drag.style.backgroundColor = 'transparent';
-                }
-                selectedPieceElement.appendChild(cellDiv_drag);
-            }
-        }
-        document.body.appendChild(selectedPieceElement);
+        
+        // ... (sürüklenen parça elementini oluşturma kodları aynı) ...
+        let minR_drag = 0, maxR_drag = 0, minC_drag = 0, maxC_drag = 0; pieceData.shape.forEach(p => { minR_drag = Math.min(minR_drag, p[1]); maxR_drag = Math.max(maxR_drag, p[1]); minC_drag = Math.min(minC_drag, p[0]); maxC_drag = Math.max(maxC_drag, p[0]); }); const rows_drag = maxR_drag - minR_drag + 1; const cols_drag = maxC_drag - minC_drag + 1; selectedPieceElement.style.gridTemplateRows = `repeat(${rows_drag}, ${CELL_SIZE}px)`; selectedPieceElement.style.gridTemplateColumns = `repeat(${cols_drag}, ${CELL_SIZE}px)`; const displayGrid_drag = Array(rows_drag).fill(null).map(() => Array(cols_drag).fill(false)); pieceData.shape.forEach(p => { displayGrid_drag[p[1] - minR_drag][p[0] - minC_drag] = true; }); for (let r_drag_idx = 0; r_drag_idx < rows_drag; r_drag_idx++) { for (let c_drag_idx = 0; c_drag_idx < cols_drag; c_drag_idx++) { const cellDiv_drag = document.createElement('div'); cellDiv_drag.classList.add('cell'); cellDiv_drag.style.width = `${CELL_SIZE}px`; cellDiv_drag.style.height = `${CELL_SIZE}px`; if (displayGrid_drag[r_drag_idx][c_drag_idx]) { cellDiv_drag.style.backgroundColor = pieceData.color; } else { cellDiv_drag.style.backgroundColor = 'transparent'; } selectedPieceElement.appendChild(cellDiv_drag); } } document.body.appendChild(selectedPieceElement);
+        
         const clientX = event.type === 'touchstart' ? event.touches[0].clientX : event.clientX;
         const clientY = event.type === 'touchstart' ? event.touches[0].clientY : event.clientY;
         const previewRect = event.currentTarget.getBoundingClientRect();
+        
+        lastDragX = clientX;
+        lastDragY = clientY;
         dragOffsetX = clientX - previewRect.left;
         dragOffsetY = clientY - previewRect.top;
-        updateDraggedPiecePosition(clientX, clientY);
+
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+        }
+        animationFrameId = requestAnimationFrame(dragAnimationLoop);
+
         if (event.type === 'mousedown') {
             document.addEventListener('mousemove', handleDragMove);
             document.addEventListener('mouseup', handleDragEnd);
         } else if (event.type === 'touchstart') {
-            document.addEventListener('touchmove', handleDragMove, {
-                passive: false
-            });
+            document.addEventListener('touchmove', handleDragMove, { passive: false });
             document.addEventListener('touchend', handleDragEnd);
         }
         if (piecesContainerEl.children[originalPieceIndexInAvailable]) {
@@ -575,52 +554,60 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleDragMove(event) {
-        if (!selectedPieceElement) return;
-        event.preventDefault();
-        const clientX = event.type === 'touchmove' ? event.touches[0].clientX : event.clientX;
-        const clientY = event.type === 'touchmove' ? event.touches[0].clientY : event.clientY;
-        updateDraggedPiecePosition(clientX, clientY);
-    }
+    function dragAnimationLoop() {
+        if (!isDragging) return;
 
-    function updateDraggedPiecePosition(clientX, clientY) {
-        if (!selectedPieceElement) return;
-        selectedPieceElement.style.left = (clientX - dragOffsetX) + 'px';
-        selectedPieceElement.style.top = (clientY - dragOffsetY) + 'px';
+        const x = lastDragX - dragOffsetX;
+        const y = lastDragY - dragOffsetY;
+        selectedPieceElement.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+        
         const canvasRect = canvas.getBoundingClientRect();
-        const pieceOriginX = parseFloat(selectedPieceElement.style.left) - canvasRect.left;
-        const pieceOriginY = parseFloat(selectedPieceElement.style.top) - canvasRect.top;
-        const potentialDropCol = Math.round(pieceOriginX / CELL_SIZE);
-        const potentialDropRow = Math.round(pieceOriginY / CELL_SIZE);
-        anticipatedLines = {
-            rows: [],
-            cols: []
-        };
+        const pieceOriginX = x - canvasRect.left + (selectedPieceElement.offsetWidth / 2); // Merkeze daha yakın hesap
+        const pieceOriginY = y - canvasRect.top + (selectedPieceElement.offsetHeight / 2);
+        const potentialDropCol = Math.round(pieceOriginX / CELL_SIZE) -1; // -1 gibi ofsetler gerekebilir
+        const potentialDropRow = Math.round(pieceOriginY / CELL_SIZE) -1;
+
+        anticipatedLines = { rows: [], cols: [] };
         if (selectedPieceData && isValidPlacement(selectedPieceData, potentialDropRow, potentialDropCol)) {
-            ghostPiecePosition = {
-                r: potentialDropRow,
-                c: potentialDropCol
-            };
+            ghostPiecePosition = { r: potentialDropRow, c: potentialDropCol };
             if (selectedPieceData.type !== 'powerup') {
                 checkAnticipatedLines(selectedPieceData, potentialDropRow, potentialDropCol);
             }
         } else {
             ghostPiecePosition = null;
         }
+
         drawGrid();
+        
+        animationFrameId = requestAnimationFrame(dragAnimationLoop);
+    }
+    
+    function handleDragMove(event) {
+        if (!isDragging) return;
+        event.preventDefault();
+        lastDragX = event.type === 'touchmove' ? event.touches[0].clientX : event.clientX;
+        lastDragY = event.type === 'touchmove' ? event.touches[0].clientY : event.clientY;
     }
 
     function handleDragEnd(event) {
-        if (!selectedPieceElement || isClearingLine) return;
+        if (!isDragging) return;
+
         isDragging = false;
+        if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+            animationFrameId = null;
+        }
+        
         document.body.classList.remove('no-select');
         ghostPiecePosition = null;
-        anticipatedLines = {
-            rows: [],
-            cols: []
-        };
-        const dropRow = Math.round((parseFloat(selectedPieceElement.style.top) - canvas.getBoundingClientRect().top) / CELL_SIZE);
-        const dropCol = Math.round((parseFloat(selectedPieceElement.style.left) - canvas.getBoundingClientRect().left) / CELL_SIZE);
+        anticipatedLines = { rows: [], cols: [] };
+
+        const finalX = lastDragX - dragOffsetX;
+        const finalY = lastDragY - dragOffsetY;
+        const canvasRect = canvas.getBoundingClientRect();
+        const dropRow = Math.round((finalY - canvasRect.top) / CELL_SIZE);
+        const dropCol = Math.round((finalX - canvasRect.left) / CELL_SIZE);
+
         if (selectedPieceData && isValidPlacement(selectedPieceData, dropRow, dropCol)) {
             availablePieces.splice(originalPieceIndexInAvailable, 1);
             if (selectedPieceData.type === 'powerup') {
@@ -648,17 +635,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             drawGrid();
         }
+        
         document.body.removeChild(selectedPieceElement);
         selectedPieceElement = null;
         selectedPieceData = null;
         originalPieceIndexInAvailable = -1;
-        if (event.type === 'mouseup') {
-            document.removeEventListener('mousemove', handleDragMove);
-            document.removeEventListener('mouseup', handleDragEnd);
-        } else if (event.type === 'touchend') {
-            document.removeEventListener('touchmove', handleDragMove);
-            document.removeEventListener('touchend', handleDragEnd);
-        }
+        
+        if (event.type === 'mouseup') { document.removeEventListener('mousemove', handleDragMove); document.removeEventListener('mouseup', handleDragEnd); } 
+        else if (event.type === 'touchend') { document.removeEventListener('touchmove', handleDragMove); document.removeEventListener('touchend', handleDragEnd); }
     }
 
     // --- Ana Oyun Mantığı Fonksiyonları ---
@@ -708,10 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let row = r - 1; row <= r + 1; row++) {
             for (let col = c - 1; col <= c + 1; col++) {
                 if (row >= 0 && row < GRID_ROWS && col >= 0 && col < GRID_COLS) {
-                    cellsInExplosion.push({
-                        r: row,
-                        c: col
-                    });
+                    cellsInExplosion.push({ r: row, c: col });
                 }
             }
         }
@@ -746,7 +727,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function animateLaser(r, c, direction, callback) {
         const duration = 250;
         let startTime = null;
-
         function animationStep(timestamp) {
             if (!startTime) startTime = timestamp;
             const progress = Math.min((timestamp - startTime) / duration, 1);
@@ -767,15 +747,9 @@ document.addEventListener('DOMContentLoaded', () => {
             } else {
                 let cellsCleared = 0;
                 if (direction === 'row') {
-                    for (let col = 0; col < GRID_COLS; col++) {
-                        if (grid[r][col] !== COLORS.empty) cellsCleared++;
-                        grid[r][col] = COLORS.empty;
-                    }
+                    for (let col = 0; col < GRID_COLS; col++) { if (grid[r][col] !== COLORS.empty) cellsCleared++; grid[r][col] = COLORS.empty; }
                 } else {
-                    for (let row = 0; row < GRID_ROWS; row++) {
-                        if (grid[row][c] !== COLORS.empty) cellsCleared++;
-                        grid[row][c] = COLORS.empty;
-                    }
+                    for (let row = 0; row < GRID_ROWS; row++) { if (grid[row][c] !== COLORS.empty) cellsCleared++; grid[row][c] = COLORS.empty; }
                 }
                 score += cellsCleared * 10;
                 updateScore(0);
@@ -795,10 +769,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (grid[r_check].every(cellColor => cellColor !== COLORS.empty)) {
                 fullRowsIndices.add(r_check);
                 for (let c_cell = 0; c_cell < GRID_COLS; c_cell++) {
-                    cellsToClearCoords.push({
-                        r: r_check,
-                        c: c_cell
-                    });
+                    cellsToClearCoords.push({ r: r_check, c: c_cell });
                 }
             }
         }
@@ -813,10 +784,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (colIsFull) {
                 fullColsIndices.add(c_check);
                 for (let r_cell = 0; r_cell < GRID_ROWS; r_cell++) {
-                    cellsToClearCoords.push({
-                        r: r_cell,
-                        c: c_check
-                    });
+                    cellsToClearCoords.push({ r: r_cell, c: c_check });
                 }
             }
         }
@@ -835,16 +803,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             function animate() {
                 if (animationStep < COLORS.clearAnimationColors.length) {
-                    uniqueCellsToClear.forEach(coord => {
-                        grid[coord.r][coord.c] = COLORS.clearAnimationColors[animationStep];
-                    });
+                    uniqueCellsToClear.forEach(coord => { grid[coord.r][coord.c] = COLORS.clearAnimationColors[animationStep]; });
                     drawGrid();
                     animationStep++;
                     setTimeout(animate, stepInterval);
                 } else {
-                    uniqueCellsToClear.forEach(coord => {
-                        grid[coord.r][coord.c] = COLORS.empty;
-                    });
+                    uniqueCellsToClear.forEach(coord => { grid[coord.r][coord.c] = COLORS.empty; });
                     isClearingLine = false;
                     if (callback) callback();
                 }
@@ -854,7 +818,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (callback) callback();
         }
     }
-
+    
     function updateScore(linesClearedCount = 0, isPotentialCombo = false) {
         if (linesClearedCount > 0) {
             const pointsEarned = COMBO_SCORES[linesClearedCount] || (COMBO_SCORES[Object.keys(COMBO_SCORES).length] + (linesClearedCount - Object.keys(COMBO_SCORES).length) * 200);
@@ -895,10 +859,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 gameContainerEl.classList.remove('screen-shake');
             }, 1000);
         }
-        checkAchievements({
-            score: score,
-            linesCleared: linesClearedCount
-        });
+        checkAchievements({ score: score, linesCleared: linesClearedCount });
     }
 
     function checkForGameOver() {
@@ -931,6 +892,24 @@ document.addEventListener('DOMContentLoaded', () => {
             anticipationInterval = null;
         }
     }
+    
+    function createTwinklingStars() {
+        const container = document.getElementById('twinkling-stars');
+        if (!container || container.childElementCount > 0) return;
+        const starCount = 60;
+        for (let i = 0; i < starCount; i++) {
+            const star = document.createElement('div');
+            star.classList.add('star');
+            const size = Math.random() * 2 + 1;
+            star.style.width = `${size}px`;
+            star.style.height = `${size}px`;
+            star.style.top = `${Math.random() * 100}%`;
+            star.style.left = `${Math.random() * 100}%`;
+            star.style.animationDelay = `${Math.random() * 4}s`;
+            star.style.animationDuration = `${Math.random() * 3 + 3}s`;
+            container.appendChild(star);
+        }
+    }
 
     // --- Oyun Başlatma ve Yönetim ---
     function startGame(mode) {
@@ -947,7 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
         score = 0;
         playerProfile.stats.gamesPlayed++;
         saveProfile();
-        checkAchievements({score: 0, linesCleared: 0});
+        checkAchievements({ score: 0, linesCleared: 0 });
         
         if (currentScoreValueEl) currentScoreValueEl.textContent = score;
         
@@ -975,10 +954,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 400);
     }
-
+    
     function returnToMainMenu() {
         playSound(SFX.click);
-        isGameOver = true;
+        isGameOver = true; 
         if (anticipationInterval) {
             clearInterval(anticipationInterval);
             anticipationInterval = null;
@@ -994,7 +973,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modeSelectionMenu.style.display = 'block';
         createTwinklingStars();
     }
-
+    
     // --- Event Listeners ---
     statsButton.addEventListener('click', () => {
         playSound(SFX.click);
