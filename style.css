@@ -167,6 +167,7 @@ body {
     margin: 0 auto;
     max-width: 100%;
     height: auto;
+    touch-action: none;
 }
 
 /* Sıradaki Parçalar Alanı */
@@ -206,10 +207,9 @@ body {
     cursor: grab;
     padding: 0;
     border: none;
-    /* YENİ: Animasyonu uygula */
     animation: pieceAppear 0.4s ease-out forwards;
-    /* Başlangıçta görünmez yapalım ki animasyon çalışsın */
     opacity: 0;
+    touch-action: none;
 }
 
 .piece-preview .cell {
